@@ -65,32 +65,28 @@ https://dbatools.io/Find-DbaAgentJob
 
 .EXAMPLE
 Find-DbaAgentJob -SQLServer Dev01 -Name backup 
-Returns all agent job(s) that have backup in the name
+Returns all agent job(s) on Dev01 that have backup in the name
 	
 .EXAMPLE
 Find-DbaAgentJob -SQLServer Dev01 -LastUsed 10 
-Returns all agent job(s) that have not ran in 10 days
+Returns all agent job(s) on Dev01 that have not ran in 10 days
 
 .EXAMPLE 
 Find-DbaAgentJob -SQLServer Dev01 -Disabled -NoEmailNotification -NoSchedule
-Returns all agent job(s) that are either disabled, have no email notification or dont have a schedule. returned with detail
+Returns all agent job(s) on Dev01 that are either disabled, have no email notification or dont have a schedule. returned with detail
 
 .EXAMPLE
 Find-DbaAgentJob -SQLServer Dev01 -LastUsed 10 -Exclude "Yearly - RollUp Workload", "SMS - Notification" 
-Returns all agent jobs that havent ran in the last 10 ignoring jobs "Yearly - RollUp Workload" and "SMS - Notification" 
+Returns all agent job(s) on Dev01 that havent ran in the last 10 days ignoring jobs "Yearly - RollUp Workload" and "SMS - Notification" 
 
 .EXAMPLE 
 Find-DbaAgentJob -SqlServer Dev01 -Category "REPL-Distribution", "REPL-Snapshot" -Detailed | Format-Table -AutoSize -Wrap 
-Returns all job/s on Dev01 that are in either category "REPL-Distribution" or "REPL-Snapshot" with detailed output
+Returns all agent job(s) on Dev01 that are in either category "REPL-Distribution" or "REPL-Snapshot" with detailed output
 
 .EXAMPLE
 Find-DbaAgentJob -SQLServer Dev01, Dev02 -Failed -Since '7/1/2016 10:47:00'
 Returns all agent job(s) that have failed since July of 2016 (and still have history in msdb)
 	
-.EXAMPLE 
-Get-SqlRegisteredServerName -SqlServer CMSServer -Group Production | Find-DbaAgentJob -Disabled -NoSchedule -Detailed | Format-Table -AutoSize -Wrap
-Queries CMS server to return all SQL instances in the Production folder and then list out all agent jobs that have either been disabled or have no schedule. 
-
 .EXAMPLE
 Find-DbaAgentJob -SQLServer Dev01, Dev02 -Name Mybackup -Exact 
 Returns all agent job(s) that are named exactly Mybackup
@@ -117,7 +113,7 @@ Returns all agent job(s) that are named exactly Mybackup
 	)
 	begin
 	{
-		if ($Failed, [boolean]$Name, [boolean]$StepName, [boolean]$LastUsed.ToString(), $Disabled, $NoSchedule, $NoEmailNotification, [boolean]$Category, [boolean]$Owner, [boolean]$Exclude -notcontains $true)
+		if ($Failed, [boolean]$Name, [boolean]$StepName, [boolean]$LastUsed, $Disabled, $NoSchedule, $NoEmailNotification, [boolean]$Category, [boolean]$Owner, [boolean]$Exclude -notcontains $true)
 		{
 			Write-Warning "At least one search term must be specified"
 			continue
@@ -200,7 +196,7 @@ Returns all agent job(s) that are named exactly Mybackup
 				}
 			}
 
-			if ([boolean]$LastUsed.ToString() -eq $true)
+			if ([boolean]$LastUsed)
 			{
 				$DaysBack = $LastUsed * -1
 				$SinceDate = (Get-date).AddDays($DaysBack)
@@ -238,12 +234,12 @@ Returns all agent job(s) that are named exactly Mybackup
 				{
 					$OwnerMatch = $Owner -replace "-", ""
 					Write-Verbose "Checking for jobs that NOT owned by: $OwnerMatch"
-					$output += $server.JobServer.jobs | Where-Object { $OwnerMatch -notcontains $_.OwnerLoginName }
+					$output += $jobs | Where-Object { $OwnerMatch -notcontains $_.OwnerLoginName }
 				}
 				else
 				{
 					Write-Verbose "Checking for jobs that are owned by: $owner"
-					$output += $server.JobServer.jobs | Where-Object { $Owner -contains $_.OwnerLoginName }
+					$output += $jobs | Where-Object { $Owner -contains $_.OwnerLoginName }
 				}
 			}
 			
